@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_gym, get_db
+from app.core.mailer import get_mailer
 from app.domain import models, schemas
 
 router = APIRouter(prefix="/api/v1/customers", tags=["customers"])
@@ -23,6 +24,24 @@ async def create_customer(
     session.add(customer)
     await session.commit()
     await session.refresh(customer)
+
+    mailer = get_mailer()
+    gym_name = current_gym.name or "our gym"
+    subject = f"Welcome to {gym_name}!"
+    body_lines = [
+        f"Hi {customer.first_name},",
+        "",
+        f"Welcome to {gym_name}. We're excited to see you in the club!",
+        "Here’s what you can do next:",
+        "  • Check in at the front desk on your first visit.",
+        "  • Ask our staff about class schedules and membership perks.",
+        "  • Reach out any time—you can reply directly to this email.",
+        "",
+        "See you soon!",
+        f"{gym_name} Team",
+    ]
+    await mailer.send(to=customer.email, subject=subject, body="\n".join(body_lines))
+
     return customer
 
 
