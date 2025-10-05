@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_gym, get_db
 from app.domain import models, schemas
+from app.services import gyms as gym_service
 
 router = APIRouter(prefix="/api/v1/gyms", tags=["gyms"])
 
@@ -18,17 +19,8 @@ async def update_current_gym(
     session: AsyncSession = Depends(get_db),
     current_gym: models.Gym = Depends(get_current_gym),
 ) -> schemas.GymOut:
-    updates = gym_update.model_dump(exclude_unset=True)
-    if not updates:
-        return current_gym
-
-    for key, value in updates.items():
-        setattr(current_gym, key, value)
-
-    session.add(current_gym)
-    await session.commit()
-    await session.refresh(current_gym)
-    return current_gym
+    updated = await gym_service.update_gym(session, current_gym, gym_update)
+    return updated
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
@@ -36,5 +28,4 @@ async def delete_current_gym(
     session: AsyncSession = Depends(get_db),
     current_gym: models.Gym = Depends(get_current_gym),
 ) -> None:
-    await session.delete(current_gym)
-    await session.commit()
+    await gym_service.delete_gym(session, current_gym)

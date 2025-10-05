@@ -41,6 +41,7 @@ class CustomerBase(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     active: Optional[bool] = True
+    date_of_birth: Optional[date] = None
     membership_start: Optional[date] = None
     membership_end: Optional[date] = None
     notes: Optional[str] = None
@@ -56,6 +57,7 @@ class CustomerUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     active: Optional[bool] = None
+    date_of_birth: Optional[date] = None
     membership_start: Optional[date] = None
     membership_end: Optional[date] = None
     notes: Optional[str] = None
