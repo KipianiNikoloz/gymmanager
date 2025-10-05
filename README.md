@@ -10,9 +10,7 @@ A production-ready FastAPI backend tailored for gym management. The service offe
    ```
 2. Install dependencies (inside your virtual environment):
    ```bash
-   uv pip install fastapi uvicorn[standard] sqlalchemy[asyncio] aiosqlite \
-   pydantic pydantic-settings passlib[bcrypt] pyjwt alembic python-multipart \
-   httpx pytest
+   uv pip install -r requirements.txt
    ```
 3. Start the development server:
    ```bash
@@ -24,11 +22,11 @@ A production-ready FastAPI backend tailored for gym management. The service offe
 
 The codebase follows a layered, feature-oriented layout:
 
-- `app/core` – application-wide configuration and shared utilities
-- `app/api` – API routers grouped by feature and versioned under `/api/v1`
-- `app/db` – database engine, sessions, and migrations
-- `app/domain` – business models and data schemas
-- `alembic` – migration environment for database evolution
+- `app/core` - application-wide configuration and shared utilities
+- `app/api` - API routers grouped by feature and versioned under `/api/v1`
+- `app/db` - database engine, sessions, and migrations
+- `app/domain` - business models and data schemas
+- `alembic` - migration environment for database evolution
 
 ## Frontend Integration
 
