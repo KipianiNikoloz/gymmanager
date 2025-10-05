@@ -1,0 +1,12 @@
+﻿fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiosqlite
+pydantic
+pydantic-settings
+passlib[bcrypt]
+pyjwt
+alembic
+python-multipart
+httpx
+pytest
