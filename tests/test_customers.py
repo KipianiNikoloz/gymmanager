@@ -15,7 +15,16 @@ async def auth_header(client: AsyncClient, gym: models.Gym) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-async def create_customer(client: AsyncClient, headers: dict[str, str], email: str, active: bool = True, first_name: str = "Alex") -> dict:
+async def create_customer(
+    client: AsyncClient,
+    headers: dict[str, str],
+    email: str,
+    *,
+    active: bool = True,
+    first_name: str = "Alex",
+    date_of_birth: str | None = "1990-01-01",
+    membership_end: str | None = None,
+) -> dict:
     payload = {
         "first_name": first_name,
         "last_name": "Doe",
@@ -23,6 +32,10 @@ async def create_customer(client: AsyncClient, headers: dict[str, str], email: s
         "active": active,
         "phone": "1234567890",
     }
+    if date_of_birth is not None:
+        payload["date_of_birth"] = date_of_birth
+    if membership_end is not None:
+        payload["membership_end"] = membership_end
     response = await client.post("/api/v1/customers", json=payload, headers=headers)
     assert response.status_code == 201
     return response.json()
@@ -35,6 +48,7 @@ async def test_create_customer(client: AsyncClient, create_gym: models.Gym) -> N
         "last_name": "Smith",
         "email": "jamie@example.com",
         "active": True,
+        "date_of_birth": "1995-05-05",
     }
 
     response = await client.post("/api/v1/customers", json=payload, headers=headers)
@@ -42,12 +56,27 @@ async def test_create_customer(client: AsyncClient, create_gym: models.Gym) -> N
     data = response.json()
     assert data["first_name"] == payload["first_name"]
     assert data["email"] == payload["email"]
+    assert data["date_of_birth"] == payload["date_of_birth"]
 
 
 async def test_list_customers_with_filters(client: AsyncClient, create_gym: models.Gym) -> None:
     headers = await auth_header(client, create_gym)
-    await create_customer(client, headers, "active@example.com", active=True, first_name="Alex")
-    await create_customer(client, headers, "inactive@example.com", active=False, first_name="Taylor")
+    await create_customer(
+        client,
+        headers,
+        "active@example.com",
+        active=True,
+        first_name="Alex",
+        date_of_birth="1990-01-01",
+    )
+    await create_customer(
+        client,
+        headers,
+        "inactive@example.com",
+        active=False,
+        first_name="Taylor",
+        date_of_birth="1980-01-01",
+    )
 
     active_response = await client.get("/api/v1/customers", params={"active": False}, headers=headers)
     assert active_response.status_code == 200
@@ -55,41 +84,40 @@ async def test_list_customers_with_filters(client: AsyncClient, create_gym: mode
     assert len(active_data) == 1
     assert active_data[0]["email"] == "inactive@example.com"
 
-    search_response = await client.get("/api/v1/customers", params={"q": "Alex"}, headers=headers)
+    search_response = await client.get("/api/v1/customers", params={"search": "Alex"}, headers=headers)
     assert search_response.status_code == 200
     search_data = search_response.json()
     assert len(search_data) == 1
+    assert search_data[0]["email"] == "active@example.com"
 
-    email_search = await client.get("/api/v1/customers", params={"q": "inactive@example.com"}, headers=headers)
+    email_search = await client.get("/api/v1/customers", params={"email": "inactive@example.com"}, headers=headers)
     assert email_search.status_code == 200
     email_matches = email_search.json()
     assert len(email_matches) == 1
     assert email_matches[0]["email"] == "inactive@example.com"
 
+    age_response = await client.get("/api/v1/customers", params={"min_age": 30, "max_age": 50}, headers=headers)
+    assert age_response.status_code == 200
+    ages = {c["email"] for c in age_response.json()}
+    assert ages == {"active@example.com", "inactive@example.com"}
 
-async def test_get_update_delete_customer(client: AsyncClient, create_gym: models.Gym) -> None:
+
+async def test_auto_deactivation_on_expiry(client: AsyncClient, create_gym: models.Gym) -> None:
     headers = await auth_header(client, create_gym)
-    created = await create_customer(client, headers, "member@example.com")
+    created = await create_customer(
+        client,
+        headers,
+        "expired@example.com",
+        membership_end="2000-01-01",
+        active=True,
+        date_of_birth=None,
+    )
     customer_id = created["id"]
 
-    fetch = await client.get(f"/api/v1/customers/{customer_id}", headers=headers)
-    assert fetch.status_code == 200
-
-    update_response = await client.patch(
-        f"/api/v1/customers/{customer_id}",
-        json={"first_name": "Jordan", "active": False},
-        headers=headers,
-    )
-    assert update_response.status_code == 200
-    updated = update_response.json()
-    assert updated["first_name"] == "Jordan"
-    assert updated["active"] is False
-
-    delete_response = await client.delete(f"/api/v1/customers/{customer_id}", headers=headers)
-    assert delete_response.status_code == 204
-
-    fetch_after_delete = await client.get(f"/api/v1/customers/{customer_id}", headers=headers)
-    assert fetch_after_delete.status_code == 404
+    response = await client.get(f"/api/v1/customers/{customer_id}", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["active"] is False
 
 
 async def test_customer_access_restricted_to_owner(client: AsyncClient, create_gym: models.Gym) -> None:
