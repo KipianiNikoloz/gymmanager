@@ -8,6 +8,8 @@ class GymBase(BaseModel):
     name: str
     email: EmailStr
     address: Optional[str] = None
+    description: Optional[str] = None
+    gym_type: Optional[str] = Field(default=None, max_length=50)
     monthly_fee_cents: int
     currency: str
 
@@ -19,6 +21,8 @@ class GymCreate(GymBase):
 class GymUpdate(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
+    description: Optional[str] = None
+    gym_type: Optional[str] = Field(default=None, max_length=50)
     monthly_fee_cents: Optional[int] = None
     currency: Optional[str] = None
 
@@ -32,7 +36,8 @@ class GymOut(GymBase):
 
 
 class CustomerBase(BaseModel):
-    full_name: str
+    first_name: str
+    last_name: str
     email: EmailStr
     phone: Optional[str] = None
     active: Optional[bool] = True
@@ -46,7 +51,8 @@ class CustomerCreate(CustomerBase):
 
 
 class CustomerUpdate(BaseModel):
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     active: Optional[bool] = None
@@ -62,11 +68,6 @@ class CustomerOut(CustomerBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
 
 
 class Token(BaseModel):
