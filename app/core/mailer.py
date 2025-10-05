@@ -3,7 +3,7 @@ import smtplib
 import ssl
 import sys
 from collections import deque
-from datetime import datetime
+from datetime import UTC, datetime
 from email.message import EmailMessage
 from functools import lru_cache
 from typing import Deque
@@ -109,12 +109,12 @@ class MailProxy(Mailer):
 
     async def _throttle(self) -> None:
         async with self._lock:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             if self._send_history:
                 elapsed = (now - self._send_history[-1]).total_seconds()
                 if elapsed < self._min_interval:
                     await asyncio.sleep(self._min_interval - elapsed)
-            self._send_history.append(datetime.utcnow())
+            self._send_history.append(datetime.now(UTC))
 
 
 @lru_cache
