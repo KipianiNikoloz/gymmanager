@@ -1,7 +1,7 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers.auth import router as auth_router
+from app.api.routers import auth, customers, gyms
 from app.core.config import get_settings
 
 
@@ -17,7 +17,9 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(auth_router)
+    app.include_router(auth.router)
+    app.include_router(gyms.router)
+    app.include_router(customers.router)
 
     @app.get("/health")
     async def health_check() -> dict[str, str]:

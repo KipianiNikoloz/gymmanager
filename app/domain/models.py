@@ -21,6 +21,8 @@ class Gym(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    gym_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     monthly_fee_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
@@ -38,7 +40,8 @@ class Customer(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     gym_id: Mapped[int] = mapped_column(ForeignKey("gyms.id", ondelete="CASCADE"), nullable=False, index=True)
-    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(128), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     phone: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
