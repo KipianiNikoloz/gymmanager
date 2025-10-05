@@ -1,7 +1,7 @@
 ﻿from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class GymBase(BaseModel):
@@ -13,7 +13,7 @@ class GymBase(BaseModel):
 
 
 class GymCreate(GymBase):
-    password: str
+    password: str = Field(min_length=8, max_length=72)
 
 
 class GymUpdate(BaseModel):
@@ -62,3 +62,13 @@ class CustomerOut(CustomerBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
