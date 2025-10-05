@@ -10,3 +10,5 @@ alembic
 python-multipart
 httpx
 pytest
+pydantic[email]
+bcrypt==3.2.2

@@ -8,6 +8,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     project_name: str = "FastAPI Gym"
     jwt_secret: str = Field(default="changeme", alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     database_url: str = Field(default="sqlite+aiosqlite:///./app.db", alias="DATABASE_URL")
     cors_origins: List[str] = Field(default_factory=lambda: ["http://localhost:5173"])
 
