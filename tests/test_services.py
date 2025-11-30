@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from app.domain import schemas
 from app.services import auth as auth_service
 from app.services import customers as customer_service
+from app.services import gyms as gym_service
 
 
 pytestmark = pytest.mark.asyncio
@@ -134,3 +135,22 @@ async def test_list_customers_supports_pagination(db_session, create_gym) -> Non
     # Ordered by created_at desc, second was created last.
     assert page_one[0].email == second.email
     assert page_two[0].email == first.email
+
+
+async def test_delete_gym_cascades_customers(db_session, create_gym) -> None:
+    gym = create_gym
+    await customer_service.create_customer(
+        db_session,
+        gym,
+        schemas.CustomerCreate(
+            first_name="To",
+            last_name="Delete",
+            email="cascade@example.com",
+        ),
+    )
+
+    await gym_service.delete_gym(db_session, gym)
+
+    # Customers are deleted via cascade; fetching list should be empty.
+    remaining = await customer_service.list_customers(db_session, gym.id)
+    assert remaining == []

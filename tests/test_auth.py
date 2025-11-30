@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_api_prefix
 from app.domain import models
+from app.core import security
 
 pytestmark = pytest.mark.asyncio
 
@@ -80,3 +81,8 @@ async def test_login_unknown_email(client: AsyncClient) -> None:
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Incorrect email or password"
+
+
+async def test_oauth_token_url_matches_prefix() -> None:
+    prefix = get_api_prefix()
+    assert security.settings.api_prefix == prefix or security.settings.api_prefix.rstrip("/") == prefix.rstrip("/")

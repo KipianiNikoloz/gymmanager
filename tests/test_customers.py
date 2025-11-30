@@ -109,6 +109,34 @@ async def test_list_customers_with_filters(client: AsyncClient, create_gym: mode
     assert ages == {"active@example.com", "inactive@example.com"}
 
 
+async def test_list_customers_invalid_age_range(client: AsyncClient, create_gym: models.Gym) -> None:
+    headers = await auth_header(client, create_gym)
+    resp = await client.get(
+        f"{API_PREFIX}/customers",
+        params={"min_age": 50, "max_age": 10},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "min_age" in resp.json()["detail"]
+
+
+async def test_list_customers_limit_bounds(client: AsyncClient, create_gym: models.Gym) -> None:
+    headers = await auth_header(client, create_gym)
+    resp = await client.get(
+        f"{API_PREFIX}/customers",
+        params={"limit": 1000},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+
+    resp_offset = await client.get(
+        f"{API_PREFIX}/customers",
+        params={"offset": -1},
+        headers=headers,
+    )
+    assert resp_offset.status_code == 422
+
+
 async def test_auto_deactivation_on_expiry(client: AsyncClient, create_gym: models.Gym) -> None:
     headers = await auth_header(client, create_gym)
     created = await create_customer(
