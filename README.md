@@ -92,6 +92,8 @@ OpenAPI docs:
 
 ## 5) Quick API walkthrough (curl)
 
+All examples assume the default `API_PREFIX=/api/v1`. If you change `API_PREFIX`, update the paths below accordingly.
+
 Sign up a gym:
 ```powershell
 curl -s -X POST http://127.0.0.1:8000/api/v1/auth/signup ^
@@ -133,7 +135,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/customers ^
 List with filters:
 ```powershell
 curl -s -H "Authorization: Bearer <TOKEN>" ^
-  "http://127.0.0.1:8000/api/v1/customers?search=alex&active=true"
+  "http://127.0.0.1:8000/api/v1/customers?search=alex&active=true&limit=50&offset=0&min_age=18&max_age=80"
 ```
 
 Update (activate/deactivate/edit):
@@ -171,7 +173,8 @@ pytest --cov=app --cov-report=term-missing
 
 Notes
 - Tests use an isolated SQLite DB (`./test.db`) and override `get_db` so they don’t affect your local data.
-- Mail is stubbed in tests; no external SMTP required.
+- Mail is stubbed in tests; no external SMTP required. If you see SMTP errors, ensure tests use the provided fixtures.
+- Service-level tests are included; aim for ≥70% coverage (enforced in CI in upcoming steps). Recent local run: ~87% (see `coverage.xml` when generated).
 
 
 ## 7) Configuration reference

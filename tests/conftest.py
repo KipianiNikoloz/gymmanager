@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -33,6 +34,10 @@ class _StubMailer(mailer_module.Mailer):
 
     async def send(self, to: str, subject: str, body: str) -> None:
         self.sent.append((to, subject, body))
+
+    def add_task(self, func, *args, **kwargs):
+        # Simulate BackgroundTasks.add_task by running immediately.
+        return asyncio.get_event_loop().create_task(func(*args, **kwargs))
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -68,7 +73,7 @@ async def reset_tables() -> AsyncGenerator[None, None]:
 
 
 @pytest.fixture(autouse=True)
-def stub_mailer(monkeypatch: pytest.MonkeyPatch) -> None:
+def stub_mailer(monkeypatch: pytest.MonkeyPatch) -> _StubMailer:
     original_get_mailer = mailer_module.get_mailer
     original_get_mailer.cache_clear()
     stub = _StubMailer()
@@ -77,9 +82,14 @@ def stub_mailer(monkeypatch: pytest.MonkeyPatch) -> None:
         return stub
 
     monkeypatch.setattr(mailer_module, "get_mailer", _get_stub_mailer)
-    yield
+    yield stub
     monkeypatch.setattr(mailer_module, "get_mailer", original_get_mailer)
     original_get_mailer.cache_clear()
+
+
+@pytest.fixture()
+def mailer_stub(stub_mailer: _StubMailer) -> _StubMailer:
+    return stub_mailer
 
 
 @pytest_asyncio.fixture()
