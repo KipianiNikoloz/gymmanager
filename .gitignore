@@ -9,3 +9,5 @@ pytest_cache/
 instructions/
 coverage.xml
 htmlcov/
+.
+.
