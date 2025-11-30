@@ -1,0 +1,60 @@
+{
+  "title": "GymManager HTTP Metrics",
+  "editable": true,
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests Total",
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "sum by (method, path, status_code) (http_requests_total)",
+          "legendFormat": "{{method}} {{path}} {{status_code}}"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "type": "graph",
+      "title": "HTTP Request Duration (p95)",
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "type": "graph",
+      "title": "Error Rate (5xx)",
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m]))",
+          "legendFormat": "5xx rate"
+        }
+      ],
+      "id": 3
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "DS_PROMETHEUS",
+        "query": "prometheus",
+        "current": {
+          "text": "Prometheus",
+          "value": "Prometheus"
+        }
+      }
+    ]
+  },
+  "refresh": "30s",
+  "uid": "gym-http",
+  "timezone": "browser"
+}

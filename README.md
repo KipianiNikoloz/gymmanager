@@ -188,6 +188,11 @@ Run locally:
 docker run -p 8000:8000 --env-file .env gymmanager:local
 ```
 
+For production builds (Azure):
+- CI builds and pushes to `gymmanageracrnikoloz.azurecr.io/gymmanager:<sha>` via GitHub Actions.
+- Production slot uses the pushed image; staging slot is swapped to production on `main`.
+- To build/push manually: `docker build -t gymmanageracrnikoloz.azurecr.io/gymmanager:latest . && docker push gymmanageracrnikoloz.azurecr.io/gymmanager:latest`
+
 ## 8) CI/CD (GitHub Actions → Azure)
 - Workflow: `.github/workflows/ci-cd.yml`
   - Runs tests with coverage gate (`coverage report --fail-under=70`).
@@ -195,6 +200,11 @@ docker run -p 8000:8000 --env-file .env gymmanager:local
   - Deploys to Azure Web App staging slot, then swaps to production on `main`.
   - Manual rollback supported via workflow_dispatch with `rollback_image` input.
 - Required secrets: `AZURE_CREDENTIALS` (service principal JSON), `AZURE_RESOURCE_GROUP`, `AZURE_WEBAPP_NAME`, ACR secrets above, and app settings (JWT_SECRET, DATABASE_URL, SMTP_*).
+
+## 9) Monitoring
+- Metrics: `/metrics` (Prometheus format), exposed via middleware; `/health` remains for liveness.
+- Prometheus example config: `docs/monitoring/prometheus.yml` (adjust targets for your environment).
+- Grafana: add dashboards for `http_requests_total` and `http_request_duration_seconds` (see `docs/monitoring/` for guidance).
 
 
 ## 7) Configuration reference
