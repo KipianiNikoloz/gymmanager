@@ -7,3 +7,5 @@ app.db
 codebase
 pytest_cache/
 instructions/
+coverage.xml
+htmlcov/

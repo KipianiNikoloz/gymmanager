@@ -33,7 +33,7 @@
 - Missing: `/metrics`, Prometheus scrape config, Grafana artifact/screenshot. To be added with Prometheus client middleware and configs.
 
 ## 6. Documentation
-- README updated to note configurable `API_PREFIX`; still needs sections for Docker, CI/CD, monitoring, and updated run/test/deploy instructions after future tasks.
+- README updated to note configurable `API_PREFIX`, Docker commands, and CI/CD (GitHub Actions → Azure) setup; still needs monitoring and deploy/run instructions refinement as features land.
 - REPORT.md (this document) captures current progress; will be extended with coverage results, CI/CD details, monitoring setup, deployment notes, SMART goals, and a brief stakeholder analysis as they land.
 
 ## 7. Risks & Actions
@@ -43,8 +43,7 @@
 - Observability/deploy debt: Metrics, Docker, and CI/CD still pending; prioritize next sprints.
 
 ## 8. Next Steps (Immediate)
-1) Re-run coverage after SQL age filtering + pagination; capture coverage summary.
-2) Introduce Dockerfile + .dockerignore; add GitHub Actions workflow with coverage gate and build.
-3) Add metrics middleware and `/metrics`; provide `prometheus.yml` and Grafana artifact.
-4) Update README with run/test/deploy/monitor instructions; include coverage report summary file once generated.
-5) Remove/rotate any committed secrets; rely on `.env.example` + platform secrets.
+1) Re-run coverage after Docker/CI changes; capture coverage summary.
+2) Add metrics middleware and `/metrics`; provide `prometheus.yml` and Grafana artifact.
+3) Update README with monitoring instructions; include coverage report summary file once generated.
+4) Remove/rotate any committed secrets; rely on `.env.example` + platform secrets.

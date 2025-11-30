@@ -176,6 +176,26 @@ Notes
 - Mail is stubbed in tests; no external SMTP required. If you see SMTP errors, ensure tests use the provided fixtures.
 - Service-level tests are included; aim for ≥70% coverage (enforced in CI in upcoming steps). Recent local run: ~87% (see `coverage.xml` when generated).
 
+## 7) Docker
+
+Build the image (multi-stage):
+```bash
+docker build -t gymmanager:local .
+```
+
+Run locally:
+```bash
+docker run -p 8000:8000 --env-file .env gymmanager:local
+```
+
+## 8) CI/CD (GitHub Actions → Azure)
+- Workflow: `.github/workflows/ci-cd.yml`
+  - Runs tests with coverage gate (`coverage report --fail-under=70`).
+  - Builds and pushes image to Azure Container Registry (secrets: `AZURE_REGISTRY_LOGIN_SERVER`, `AZURE_REGISTRY_USERNAME`, `AZURE_REGISTRY_PASSWORD`).
+  - Deploys to Azure Web App staging slot, then swaps to production on `main`.
+  - Manual rollback supported via workflow_dispatch with `rollback_image` input.
+- Required secrets: `AZURE_CREDENTIALS` (service principal JSON), `AZURE_RESOURCE_GROUP`, `AZURE_WEBAPP_NAME`, ACR secrets above, and app settings (JWT_SECRET, DATABASE_URL, SMTP_*).
+
 
 ## 7) Configuration reference
 
