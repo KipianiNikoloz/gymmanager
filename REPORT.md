@@ -46,3 +46,4 @@
 1) Re-run coverage after observability changes; capture coverage summary.
 2) Add monitoring evidence: screenshots in `docs/monitoring/` if possible; consider adding tests for error-path metrics.
 3) Remove/rotate any committed secrets; rely on `.env.example` + platform secrets.
+4) Smoke test migrations against Postgres (DATABASE_URL with asyncpg) and document results.

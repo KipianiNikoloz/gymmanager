@@ -72,6 +72,13 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Run Alembic migrations (staging)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          alembic upgrade head
       - name: Deploy to staging slot
         uses: azure/webapps-deploy@v2
         with:
@@ -91,6 +98,13 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Run Alembic migrations (production)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PRODUCTION }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          alembic upgrade head
       - name: Swap staging to production
         uses: azure/CLI@v1
         with:
