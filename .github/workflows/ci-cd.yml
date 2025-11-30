@@ -68,6 +68,7 @@ jobs:
     env:
       IMAGE_URI: ${{ needs.build.outputs.image_uri }}
     steps:
+      - uses: actions/checkout@v4
       - name: Azure login
         uses: azure/login@v1
         with:
@@ -94,6 +95,7 @@ jobs:
     env:
       IMAGE_URI: ${{ needs.build.outputs.image_uri }}
     steps:
+      - uses: actions/checkout@v4
       - name: Azure login
         uses: azure/login@v1
         with:
