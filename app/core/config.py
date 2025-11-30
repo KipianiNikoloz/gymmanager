@@ -47,3 +47,11 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def get_api_prefix() -> str:
+    """Return a normalized API prefix with a single leading slash and no trailing slash."""
+    prefix = get_settings().api_prefix.strip()
+    if not prefix.startswith("/"):
+        prefix = f"/{prefix}"
+    return prefix.rstrip("/") or "/"

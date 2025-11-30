@@ -2,10 +2,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_gym, get_db
+from app.core.config import get_api_prefix
 from app.domain import models, schemas
 from app.services import gyms as gym_service
 
-router = APIRouter(prefix="/api/v1/gyms", tags=["gyms"])
+router = APIRouter(prefix=f"{get_api_prefix()}/gyms", tags=["gyms"])
 
 
 @router.get("/me", response_model=schemas.GymOut)

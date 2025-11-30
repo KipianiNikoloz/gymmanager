@@ -1,22 +1,29 @@
 ﻿from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_gym, get_db
+from app.core.config import get_api_prefix
 from app.domain import models, schemas
 from app.services import customers as customer_service
 
-router = APIRouter(prefix="/api/v1/customers", tags=["customers"])
+router = APIRouter(prefix=f"{get_api_prefix()}/customers", tags=["customers"])
 
 
 @router.post("", response_model=schemas.CustomerOut, status_code=status.HTTP_201_CREATED)
 async def create_customer(
     customer_in: schemas.CustomerCreate,
     session: AsyncSession = Depends(get_db),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     current_gym: models.Gym = Depends(get_current_gym),
 ) -> schemas.CustomerOut:
-    customer = await customer_service.create_customer(session, current_gym, customer_in)
+    customer = await customer_service.create_customer(
+        session,
+        current_gym,
+        customer_in,
+        schedule_mail=background_tasks.add_task if background_tasks else None,
+    )
     return customer
 
 
@@ -29,21 +36,28 @@ async def list_customers(
     email: Optional[str] = Query(default=None, min_length=3),
     min_age: Optional[int] = Query(default=None, ge=0),
     max_age: Optional[int] = Query(default=None, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db),
     current_gym: models.Gym = Depends(get_current_gym),
 ) -> list[schemas.CustomerOut]:
-    customers = await customer_service.list_customers(
-        session,
-        current_gym.id,
-        active=active,
-        search=search,
-        first_name=first_name,
-        last_name=last_name,
-        email=email,
-        min_age=min_age,
-        max_age=max_age,
-    )
-    return customers
+    try:
+        customers = await customer_service.list_customers(
+            session,
+            current_gym.id,
+            active=active,
+            search=search,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            min_age=min_age,
+            max_age=max_age,
+            limit=limit,
+            offset=offset,
+        )
+        return customers
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.get("/{customer_id}", response_model=schemas.CustomerOut)

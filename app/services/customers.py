@@ -1,5 +1,6 @@
-﻿from datetime import date
-from typing import Iterable, Optional
+﻿import asyncio
+from datetime import date
+from typing import Iterable, Optional, Callable, Any
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,16 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.mailer import get_mailer
 from app.domain import models, schemas
 
+
 def _today() -> date:
     return date.today()
 
 
-def _calculate_age(dob: Optional[date]) -> Optional[int]:
-    if dob is None:
-        return None
+def _years_ago(years: int) -> date:
     today = _today()
-    years = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-    return years
+    try:
+        return today.replace(year=today.year - years)
+    except ValueError:
+        # Handle leap day by clamping to Feb 28.
+        return today.replace(month=2, day=28, year=today.year - years)
 
 
 async def _deactivate_if_expired(customers: Iterable[models.Customer], session: AsyncSession) -> None:
@@ -35,28 +38,11 @@ async def _deactivate_if_expired(customers: Iterable[models.Customer], session: 
             if customer.id in expired_ids:
                 await session.refresh(customer)
 
-
-def _apply_age_filters(customers: list[models.Customer], min_age: Optional[int], max_age: Optional[int]) -> list[models.Customer]:
-    if min_age is None and max_age is None:
-        return customers
-
-    filtered: list[models.Customer] = []
-    for customer in customers:
-        age = _calculate_age(customer.date_of_birth)
-        if age is None:
-            continue
-        if min_age is not None and age < min_age:
-            continue
-        if max_age is not None and age > max_age:
-            continue
-        filtered.append(customer)
-    return filtered
-
-
 async def create_customer(
     session: AsyncSession,
     gym: models.Gym,
     customer_in: schemas.CustomerCreate,
+    schedule_mail: Callable[[Callable[..., Any], Any, Any], Any] | None = None,
 ) -> models.Customer:
     customer = models.Customer(
         gym_id=gym.id,
@@ -80,11 +66,16 @@ async def create_customer(
         "See you soon!",
         f"{gym_name} Team",
     ]
-    await mailer.send(
-        to=customer.email,
-        subject=f"Welcome to {gym_name}!",
-        body="\n".join(body_lines),
-    )
+    if schedule_mail:
+        maybe_task = schedule_mail(mailer.send, customer.email, f"Welcome to {gym_name}!", "\n".join(body_lines))
+        if asyncio.iscoroutine(maybe_task) or isinstance(maybe_task, asyncio.Task):
+            await maybe_task
+    else:
+        await mailer.send(
+            to=customer.email,
+            subject=f"Welcome to {gym_name}!",
+            body="\n".join(body_lines),
+        )
 
     return customer
 
@@ -100,7 +91,12 @@ async def list_customers(
     email: Optional[str] = None,
     min_age: Optional[int] = None,
     max_age: Optional[int] = None,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[models.Customer]:
+    if min_age is not None and max_age is not None and min_age > max_age:
+        raise ValueError("min_age cannot be greater than max_age")
+
     stmt = select(models.Customer).where(models.Customer.gym_id == gym_id)
 
     if active is not None:
@@ -128,10 +124,18 @@ async def list_customers(
     if email:
         stmt = stmt.where(models.Customer.email.ilike(_ilike(email)))
 
-    result = await session.execute(stmt.order_by(models.Customer.created_at.desc()))
+    if min_age is not None:
+        min_dob = _years_ago(min_age)
+        stmt = stmt.where(models.Customer.date_of_birth <= min_dob)
+
+    if max_age is not None:
+        max_dob = _years_ago(max_age)
+        stmt = stmt.where(models.Customer.date_of_birth >= max_dob)
+
+    stmt = stmt.order_by(models.Customer.created_at.desc()).limit(limit).offset(offset)
+    result = await session.execute(stmt)
     customers: list[models.Customer] = list(result.scalars().all())
 
-    customers = _apply_age_filters(customers, min_age, max_age)
     await _deactivate_if_expired(customers, session)
     return customers
 
