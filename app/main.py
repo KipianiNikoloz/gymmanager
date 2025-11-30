@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from app.api.routers import auth, customers, gyms
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.core.metrics import register_metrics
 
 
 def create_application() -> FastAPI:
@@ -22,6 +23,8 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    register_metrics(app)
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:

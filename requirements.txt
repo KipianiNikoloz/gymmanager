@@ -14,3 +14,4 @@ pytest-asyncio
 pytest-cov
 pydantic[email]
 bcrypt==3.2.2
+prometheus-client
