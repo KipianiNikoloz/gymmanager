@@ -54,13 +54,16 @@ Create a `.env` file:
 Copy-Item .env.example .env
 ```
 
-Edit `.env` if needed (defaults work):
+Edit `.env`:
 ```
 JWT_SECRET=changeme
+# For Postgres in Azure or local:
+# DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
 DATABASE_URL=sqlite+aiosqlite:///./app.db
 ```
 Notes
-- Change `DATABASE_URL` to your DB of choice later (e.g., Postgres).
+- For production use Postgres (e.g., Azure Database for PostgreSQL) with the asyncpg driver.
+- SQLite is fine for local dev/tests.
 
 
 ## 3) Backend — initialize database (Alembic)
@@ -68,7 +71,7 @@ Notes
 ```powershell
 alembic upgrade head
 ```
-This applies all migrations and creates `gyms` and `customers`.
+This applies all migrations and creates `gyms` and `customers` (against the DB in `DATABASE_URL`, SQLite or Postgres).
 
 Troubleshooting
 - If `alembic` not found: `pip install alembic` (already in requirements) and ensure the venv is active.
@@ -205,6 +208,11 @@ For production builds (Azure):
 - Metrics: `/metrics` (Prometheus format), exposed via middleware; `/health` remains for liveness.
 - Prometheus example config: `docs/monitoring/prometheus.yml` (adjust targets for your environment).
 - Grafana: add dashboards for `http_requests_total` and `http_request_duration_seconds` (see `docs/monitoring/` for guidance).
+
+## 10) Postgres (recommended for production)
+- Set `DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname`.
+- Ensure the DB exists and run `alembic upgrade head` against it.
+- In Azure, configure app settings for both staging and production slots with your Postgres URL and credentials.
 
 
 ## 7) Configuration reference
