@@ -6,4 +6,3 @@ app.db
 *.coverage
 codebase
 pytest_cache/
-instructions/
