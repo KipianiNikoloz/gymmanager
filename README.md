@@ -1,5 +1,7 @@
 # Gym Manager — FastAPI Backend (Assignment 2 Final) 
 
+## DISCLAIMER - NO LONGER DEPLOYED DUE TO AZURE HOSTING COSTS
+
 Production-ready FastAPI backend for gym management. Provides JWT-based auth for gym owners, gym profile management, customer CRUD with filtering/pagination/expiry handling, SMTP-capable mailer, Prometheus metrics, and CI/CD to Azure with staging/production slots. This README is the definitive guide to replicate, run, test, deploy, and monitor the service.
 
 ## Table of Contents
